@@ -1,0 +1,13 @@
+@font-face {
+  font-family: "Plus Jakarta Sans";
+  src: url("../public/fonts/Plus_Jakarta_Sans.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Plus Jakarta Sans";
+  src: url("../public/fonts/Plus_Jakarta_Sans_Italic.ttf") format("truetype");
+  font-weight: normal;
+  font-style: italic;
+}

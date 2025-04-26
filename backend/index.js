@@ -2,7 +2,7 @@ import express from "express";
 import jwt from "jsonwebtoken";
 import { z } from "zod";
 import bcrypt from "bcrypt";
-import { ContentModel, UserModel } from "./db.js";
+import { ContentModel, LinkModel, UserModel, TagModel } from "./db.js";
 import { userMiddleware } from "./middleware.js";
 import dotenv from "dotenv";
 dotenv.config();
@@ -117,8 +117,47 @@ app.delete("/api/v1/content", userMiddleware, async (req, res) => {
   const contentId = req.body.contentId;
   await ContentModel.deleteOne({
     contentId,
-    userId: res.userId
-  })
-})
+    userId: res.userId,
+  });
+});
+
+app.post("/api/v1/brain/share", async (req, res) => {
+  const share = req.body.share;
+  if (share) {
+    const existingLink = await LinkModel.findOne({ userId: req.userId });
+    if (existingLink) {
+      res.json({ hash: existingLink.hash });
+      return;
+    }
+    const hash = crypto.randomBytes(8).toString("hex");
+    await LinkModel.create({
+      userId: req.userId,
+      hash,
+    });
+    res.json({ hash });
+  } else {
+    await LinkModel.deleteOne({ userId: req.userId });
+    res.json({ message: "Link deleted" });
+  }
+});
+
+app.get("/api/v1/brain/:sharelink", async (req, res) => {
+  const sharelink = req.params.sharelink;
+  const link = await LinkModel.findOne({ sharelink });
+  if (!link) {
+    res.status(404).json({ message: "Link not found" });
+  }
+
+  const content = await ContentModel.findOne({ userId: link.userId });
+  const user = await UserModel.findOne({ _id: link.userId });
+  if (!user) {
+    res.status(411).json({ message: "User not found" });
+    return;
+  }
+  res.json({
+    username: user.username,
+    content: content,
+  });
+});
 
 app.listen(port);
